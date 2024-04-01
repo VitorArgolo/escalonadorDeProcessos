@@ -38,4 +38,4 @@ Este é um aplicativo web para simulação de escalonamento de processos em sist
 
 &copy; 2024 Escalonador de Processos. Todos os direitos reservados.
 
-Siga nas redes sociais: [LinkedIn](#https://www.linkedin.com/in/vitor-argolo-76a624110/), [Instagram](#https://www.instagram.com/apc_vitor/)
+Siga nas redes sociais: [LinkedIn](https://www.linkedin.com/in/vitor-argolo-76a624110/), [Instagram](https://www.instagram.com/apc_vitor/)
