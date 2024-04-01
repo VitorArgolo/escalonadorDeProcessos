@@ -1,0 +1,25 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    position: relative;
+}
+
+.content {
+    /* Altura da sua página excluindo o footer */
+    min-height: calc(100vh - 100px); /* 100px é uma estimativa da altura do seu footer, ajuste conforme necessário */
+}
+
+
+body {
+    margin-bottom: 100px; /* Adjust this value based on the height of your footer */
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    z-index: 1; /* Ensure the footer stays above other content */
+}
+
+
