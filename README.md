@@ -5,7 +5,7 @@ Este é um aplicativo web para simulação de escalonamento de processos em sist
 ## Funcionalidades Principais
 
 - **Configurações de Processos:** Configure a quantidade de processos e carregue dados a partir de arquivos Excel.
-- ![image](https://github.com/VitorArgolo/escalonadorDeProcessos/assets/83723061/45885726-236b-48a4-bd05-c957da4d6589)
+[EscalonamentoTeste.xlsx](https://github.com/VitorArgolo/escalonadorDeProcessos/files/14824638/EscalonamentoTeste.xlsx)
 
 - **Seleção de Algoritmos:** Escolha entre diversos algoritmos de escalonamento, incluindo FCFS, SJF, PRIOC, PRIOP, SRTF.
 - **Execução Simulada:** Execute o algoritmo selecionado e visualize os resultados de tempo médio de execução e espera.
