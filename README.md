@@ -5,7 +5,7 @@ Este é um aplicativo web para simulação de escalonamento de processos em sist
 ## Funcionalidades Principais
 
 - **Configurações de Processos:** Configure a quantidade de processos e carregue dados a partir de arquivos Excel.
-- **Seleção de Algoritmos:** Escolha entre diversos algoritmos de escalonamento, incluindo FCFS, SJF, PRIOC, PRIOP, SRTF.
+- **Seleção de Algoritmos:** Escolha entre diversos algoritmos de escalonamento, incluindo FCFS, SJF, PRIOC, PRIOP, SRTF, RR.
 - **Execução Simulada:** Execute o algoritmo selecionado e visualize os resultados de tempo médio de execução e espera.
 - **Visualização Gráfica:** Analise os resultados através de gráficos interativos.
 

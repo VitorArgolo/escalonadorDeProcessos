@@ -1,12 +1,22 @@
+class Grafico {
+    constructor(id, chegada, fim) {
+        this.Id = id;
+        this.Chegada = chegada;
+        this.Fim = fim;
+    }
+}
+
 class Processo {
-    constructor(id, tempoChegada, tempoRestante, prioridade) {
+    constructor(id, tempoChegada, tempoRestante, prioridade, tempoConclusao, tempoInversao, tempoEspera) {
         this.id = id;
         this.tempoChegada = tempoChegada;
         this.tempoRestante = tempoRestante;
         this.prioridade = prioridade;
+        this.TempoConclusao = tempoConclusao;
+        this.TempoInversao = tempoInversao;
+        this.TempoEspera = tempoEspera;
     }
 }
-
 
 function criarLinhasTabela(quantidade) {
     let tabela = document.getElementById("tabela").getElementsByTagName('tbody')[0];
@@ -21,21 +31,37 @@ function criarLinhasTabela(quantidade) {
 function obterDadosProcessos() {
     let processos = [];
     let linhas = document.querySelectorAll("#tabela tbody tr");
+    let algoritmo = document.getElementById("algoritmo").value;
+
     for (let i = 0; i < linhas.length; i++) {
         let colunas = linhas[i].querySelectorAll("td");
         let tempoChegada = parseInt(colunas[1].innerText);
         let tempoRestante = parseInt(colunas[2].innerText);
         let prioridade = parseInt(colunas[3].innerText);
 
-        if (isNaN(tempoChegada) || isNaN(tempoRestante) || isNaN(prioridade)) {
-            Swal.fire({
-                title: 'Preencha a Tabela!',
-                text: 'Preencha todos os valores na tabela antes de executar o algoritmo.',
-                icon: 'error',
-                showConfirmButton: false,
-                timer: 1500
-            });
-            return [];
+        if (algoritmo == "RR" || algoritmo == "SRTF" || algoritmo == "FCFS" || algoritmo == "SJF") {
+            if (isNaN(tempoChegada) || isNaN(tempoRestante)) {
+                Swal.fire({
+                    title: 'Preencha a Tabela!',
+                    text: 'Preencha todos os valores na tabela antes de executar o algoritmo.',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return [];
+            }
+        }
+        if (algoritmo == "PRIOC" || algoritmo == "PRIOP") {
+            if (isNaN(tempoChegada) || isNaN(tempoRestante) || isNaN(prioridade)) {
+                Swal.fire({
+                    title: 'Preencha a Tabela!',
+                    text: 'Preencha todos os valores na tabela antes de executar o algoritmo.',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return [];
+            }
         }
 
         processos.push(new Processo(i, tempoChegada, tempoRestante, prioridade));
@@ -44,19 +70,17 @@ function obterDadosProcessos() {
 }
 
 function executarAlgoritmo() {
-    
+
     let algoritmo = document.getElementById("algoritmo").value;
     let processos = obterDadosProcessos();
-    if (processos.length === 0) {
-        return;
-    }
-    document.getElementById("salvar").style.display="block";
-    
+
+    document.getElementById("salvar").style.display = "block";
+
 
     let resultados;
     switch (algoritmo) {
         case "FCFS":
-            resultados = CalcularFCFS(processos);
+            CalcularFCFS(processos);
             break;
         case "SJF":
             resultados = CalcularSJF(processos);
@@ -71,13 +95,45 @@ function executarAlgoritmo() {
             resultados = CalcularSRTF(processos);
             break;
         case "RR":
-            let quantum = 2; 
-            resultados = CalcularRR(processos, quantum);
+            const mostrarPrompt = async () => {
+                let numeroInserido = '';
+                let isValid = false;
+
+                while (!isValid) {
+                    await Swal.fire({
+                        title: 'Digite um número:',
+                        input: 'text',
+                        inputAttributes: {
+                            autocapitalize: 'off'
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Cancelar',
+                        showLoaderOnConfirm: true,
+                        preConfirm: (value) => {
+                            if (!isNaN(parseFloat(value))) {
+                                numeroInserido = parseFloat(value);
+                                isValid = true;
+                            } else {
+                                Swal.showValidationMessage('Por favor, insira um número válido!');
+                            }
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    });
+                }
+
+                // Aqui você pode fazer o que precisa com o número inserido
+                let quantum = numeroInserido;
+                CalcularRR(processos, quantum);
+            };
+
+            mostrarPrompt();
+
+
             break;
         default:
             alert("Opção inválida!");
     }
-
 
     if (algoritmo == "SJF" || algoritmo == "PRIOC") {
 
@@ -88,12 +144,10 @@ function executarAlgoritmo() {
         tempoMedioExecucaoSpan.textContent = tempoMedioExecucao.toFixed(2);
         tempoMedioEsperaSpan.textContent = tempoMedioEspera.toFixed(2);
     }
-
     limparValoresNegativos();
-
 }
 
-let chartInstance; 
+let chartInstance;
 
 function criarGrafico(dadosGrafico) {
     if (chartInstance) {
@@ -107,15 +161,15 @@ function criarGrafico(dadosGrafico) {
     dadosGrafico.forEach((dado, index) => {
         barData.push({
             label: `P${dado.id}`,
-            backgroundColor: cores[index % cores.length], 
+            backgroundColor: cores[index % cores.length],
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1, 
-            data: [{x: `P${dado.id}`, y: dado.chegada}, {x: `P${dado.id}`, y: dado.termino}]
+            borderWidth: 1,
+            data: [{ x: `P${dado.id}`, y: dado.chegada }, { x: `P${dado.id}`, y: dado.termino }]
         });
     });
 
     chartInstance = new Chart(ctx, {
-        type: 'bar', 
+        type: 'bar',
         data: {
             datasets: barData
         },
@@ -140,22 +194,17 @@ function criarGrafico(dadosGrafico) {
                         display: true,
                         text: 'Tempo'
                     },
-                    suggestedMin: 0 
+                    suggestedMin: 0
                 }
             },
             elements: {
                 bar: {
-                    barPercentage:0 
+                    barPercentage: 0
                 }
             }
         }
     });
 }
-
-
-
-
-
 
 function CalcularFCFS(processos) {
     let tempoDeTermino = [];
@@ -235,7 +284,7 @@ function CalcularPRIOc(processos) {
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
     let fila = [];
     let tempoAtual = 0;
-    let resultados = []; 
+    let resultados = [];
     let dadosGrafico = [];
     while (processosOrdenados.length > 0 || fila.length > 0) {
         while (processosOrdenados.length > 0 && processosOrdenados[0].tempoChegada <= tempoAtual) {
@@ -251,7 +300,7 @@ function CalcularPRIOc(processos) {
             tempoTotal += processoAtual.tempoConclusao - processoAtual.tempoChegada;
             tempoEsperaTotal += processoAtual.tempoInicioExecucao - processoAtual.tempoChegada;
             dadosGrafico.push({ id: processoAtual.id + 1, chegada: processoAtual.tempoChegada, termino: processoAtual.tempoConclusao });
-            resultados.push(processoAtual); 
+            resultados.push(processoAtual);
         } else {
             tempoAtual = processosOrdenados[0].tempoChegada;
         }
@@ -260,16 +309,16 @@ function CalcularPRIOc(processos) {
     let tempoMedioExecucao = tempoTotal / processos.length;
     criarGrafico(dadosGrafico);
 
-    return resultados; 
+    return resultados;
 }
 
 function CalcularPRIOp(processos) {
     let tempoTotal = 0;
     let tempoEsperaTotal = 0;
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
-    let fila = []; 
+    let fila = [];
     let tempoAtual = 0;
-    let resultados = []; 
+    let resultados = [];
     let dadosGrafico = [];
     while (processosOrdenados.length > 0 || fila.length > 0) {
         while (processosOrdenados.length > 0 && processosOrdenados[0].tempoChegada <= tempoAtual) {
@@ -279,23 +328,22 @@ function CalcularPRIOp(processos) {
 
         if (fila.length > 0) {
             let processoAtual = fila.sort((a, b) => b.prioridade - a.prioridade)[0];
-            fila = fila.filter(p => p !== processoAtual); 
+            fila = fila.filter(p => p !== processoAtual);
             processoAtual.tempoInicioExecucao = tempoAtual;
 
             if (processoAtual.tempoRestante > 1) {
                 processoAtual.tempoRestante--;
                 tempoAtual++;
                 fila.push(processoAtual);
-                fila.sort((a, b) => b.prioridade - a.prioridade); 
+                fila.sort((a, b) => b.prioridade - a.prioridade);
             } else {
                 tempoAtual++;
                 processoAtual.tempoConclusao = tempoAtual;
                 tempoTotal += processoAtual.tempoConclusao - processoAtual.tempoChegada;
                 tempoEsperaTotal += processoAtual.tempoInicioExecucao - processoAtual.tempoChegada;
 
-
                 dadosGrafico.push({ id: processoAtual.id + 1, chegada: processoAtual.tempoChegada, termino: processoAtual.tempoConclusao });
-                resultados.push(processoAtual); 
+                resultados.push(processoAtual);
             }
         } else {
             tempoAtual = processosOrdenados[0].tempoChegada;
@@ -303,8 +351,8 @@ function CalcularPRIOp(processos) {
 
         let processoMenorTempoRestante = fila.find(p => p.tempoRestante < fila[0].tempoRestante);
         if (processoMenorTempoRestante) {
-            fila = fila.filter(p => p !== processoMenorTempoRestante); 
-            fila.push(processoMenorTempoRestante); 
+            fila = fila.filter(p => p !== processoMenorTempoRestante);
+            fila.push(processoMenorTempoRestante);
         }
     }
 
@@ -377,55 +425,75 @@ class ProcessoTermino {
     }
 }
 
-function CalcularRR(processos, quantum) {
-    let tempoTotal = 0;
-    let tempoEsperaTotal = 0;
-    let tempoAtual = 0;
-    let fila = [...processos]; 
-    let resultados = [];
+function CalcularRR(processos, quantumTempo) {
+    let tempoTerminoPorId = {};
+    let informacoesProcessos = [...processos];
     let dadosGrafico = [];
+    let filaPronta = [];
+    let tempoAtual = informacoesProcessos[0].tempoChegada;
+    let trabalhosInacabados = [...informacoesProcessos];
+    let tempoRestante = {};
+    let somaTempoChegada = 0.00;
+    let somaTempoRestante = 0.00;
+    var somaTempoTermino = 0;
 
-    console.log("Iniciando execução do algoritmo Round-Robin...");
-    console.log("Quantum: ", quantum);
+    informacoesProcessos.forEach(p => {
+        tempoRestante[p.id] = p.tempoRestante;
+    });
 
-    while (fila.length > 0) {
-        let processoAtual = fila.shift(); 
-        let tempoExecutado = Math.min(quantum, processoAtual.tempoRestante);
+    filaPronta.push(trabalhosInacabados[0]);
+    while (Object.values(tempoRestante).reduce((acc, curr) => acc + curr, 0) > 0 && trabalhosInacabados.length > 0) {
+        if (filaPronta.length === 0 && trabalhosInacabados.length > 0) {
+            filaPronta.push(trabalhosInacabados[0]);
+            tempoAtual = filaPronta[0].tempoChegada;
+        }
 
-        console.log("Processando o processo P" + processoAtual.id + " com tempo restante " + processoAtual.tempoRestante + " e tempo executado " + tempoExecutado);
+        let processoParaExecutar = filaPronta[0];
 
-        processoAtual.tempoInicioExecucao = tempoAtual;
-        processoAtual.tempoRestante -= tempoExecutado;
-        tempoAtual += tempoExecutado;
+        let tempoRest = Math.min(tempoRestante[processoParaExecutar.id], quantumTempo);
+        tempoRestante[processoParaExecutar.id] -= tempoRest;
+        let tempoAtualAnterior = tempoAtual;
+        tempoAtual += tempoRest;
+        dadosGrafico.push({ id: processoParaExecutar.id + 1, chegada: tempoAtualAnterior, termino: tempoAtual });
 
-        dadosGrafico.push({ id: processoAtual.id + 1, chegada: processoAtual.tempoChegada, termino: tempoAtual });
+        let processosParaChegarNesteCiclo = informacoesProcessos
+            .filter(p => p.tempoChegada <= tempoAtual && p !== processoParaExecutar && !filaPronta.includes(p) && trabalhosInacabados.includes(p));
 
-        if (processoAtual.tempoRestante > 0) {
-            fila.push(processoAtual);
-            console.log("O processo P" + processoAtual.id + " ainda não foi concluído. Adicionado de volta à fila.");
-        } else {
-            processoAtual.tempoConclusao = tempoAtual;
-            tempoTotal += processoAtual.tempoConclusao - processoAtual.tempoChegada;
-            tempoEsperaTotal += processoAtual.tempoInicioExecucao - processoAtual.tempoChegada;
-            resultados.push(processoAtual);
-            console.log("O processo P" + processoAtual.id + " foi concluído. Tempo de conclusão: " + tempoAtual);
+        filaPronta.push(...processosParaChegarNesteCiclo);
+
+        filaPronta.push(filaPronta[0]);
+        filaPronta.shift();
+
+        if (tempoRestante[processoParaExecutar.id] === 0) {
+            let indiceParaRemoverTI = trabalhosInacabados.findIndex(p => p.id === processoParaExecutar.id);
+            if (indiceParaRemoverTI > -1) {
+                trabalhosInacabados.splice(indiceParaRemoverTI, 1);
+                tempoTerminoPorId[processoParaExecutar.id] = tempoAtual;
+            }
+
+            let indiceParaRemoverFP = filaPronta.findIndex(p => p.id === processoParaExecutar.id);
+            if (indiceParaRemoverFP > -1)
+                filaPronta.splice(indiceParaRemoverFP, 1);
+
         }
     }
 
-    let tempoMedioExecucao = tempoTotal / processos.length;
-    let tempoMedioEspera = tempoEsperaTotal / processos.length;
+    processos.forEach(processo => {
+        somaTempoChegada += processo.tempoChegada;
+        somaTempoRestante += processo.tempoRestante;
+    });
 
+    Object.keys(tempoTerminoPorId).forEach(id => {
+        somaTempoTermino += tempoTerminoPorId[id];
+    });
+
+    tempoMedioExecucao = ((somaTempoTermino - somaTempoChegada) / processos.length);
+    tempoMedioEspera = (((somaTempoTermino - somaTempoChegada) - somaTempoRestante) / processos.length);
+    document.getElementById("tempo-medio-execucao").innerText = tempoMedioExecucao.toFixed(2);
+    document.getElementById("tempo-medio-espera").innerText = tempoMedioEspera.toFixed(2);
     criarGrafico(dadosGrafico);
-
-    document.getElementById("tempo-medio-execucao").textContent = tempoMedioExecucao.toFixed(2);
-    document.getElementById("tempo-medio-espera").textContent = tempoMedioEspera.toFixed(2);
-
-    console.log("Algoritmo Round-Robin concluído.");
-    console.log("Tempo médio de execução: ", tempoMedioExecucao);
-    console.log("Tempo médio de espera: ", tempoMedioEspera);
-
-    return resultados;
 }
+
 document.getElementById("quantidade").addEventListener("change", function () {
     let quantidade = parseInt(this.value);
     criarLinhasTabela(quantidade);
@@ -434,7 +502,9 @@ document.getElementById("quantidade").addEventListener("change", function () {
 criarLinhasTabela(5);
 
 function preencherTabelaComExcelData(worksheet) {
-    const headerRow = worksheet[0];  
+
+
+    const headerRow = worksheet[0];
     const tempoChegadaIndex = headerRow.indexOf('Tempo Chegada');
     const tempoRestanteIndex = headerRow.indexOf('Tempo Restante');
     const prioridadeIndex = headerRow.indexOf('Prioridade');
@@ -459,17 +529,17 @@ function preencherTabelaComExcelData(worksheet) {
     }
 }
 
-document.getElementById('excelFile').addEventListener('change', function(event) {
+document.getElementById('excelFile').addEventListener('change', function (event) {
     const fileInput = event.target;
     const file = fileInput.files[0];
     const reader = new FileReader();
 
     fileInput.value = '';
 
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]]; 
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         preencherTabelaComExcelData(XLSX.utils.sheet_to_json(worksheet, { header: 1 }));
     };
 
@@ -491,7 +561,6 @@ function limparValoresNegativos() {
     if (tempoMedioExecucao < 0) {
         tempoMedioExecucaoSpan.textContent = 0;
     }
-
     if (tempoMedioEspera < 0) {
         tempoMedioEsperaSpan.textContent = 0;
     }
@@ -500,11 +569,9 @@ function limparValoresNegativos() {
 function salvarGrafico() {
     var grafico = document.getElementById("grafico");
     var url = grafico.toDataURL("image/png");
-
     var link = document.createElement('a');
     link.download = 'grafico.png';
     link.href = url;
-
     link.click();
 }
 
