@@ -18,6 +18,15 @@ class Processo {
     }
 }
 
+const ALGORITMOS = {
+    FCFS: "FCFS",
+    SJF: "SJF",
+    PRIOC: "PRIOC",
+    PRIOP: "PRIOP",
+    SRTF: "SRTF",
+    RR: "RR"
+};
+
 function criarLinhasTabela(quantidade) {
     let tabela = document.getElementById("tabela").getElementsByTagName('tbody')[0];
     tabela.innerHTML = "";
@@ -39,7 +48,7 @@ function obterDadosProcessos() {
         let tempoRestante = parseInt(colunas[2].innerText);
         let prioridade = parseInt(colunas[3].innerText);
 
-        if (algoritmo == "RR" || algoritmo == "SRTF" || algoritmo == "FCFS" || algoritmo == "SJF") {
+        if (algoritmo === ALGORITMOS.RR || algoritmo === ALGORITMOS.SRTF || algoritmo === ALGORITMOS.FCFS || algoritmo === ALGORITMOS.SJF) {
             if (isNaN(tempoChegada) || isNaN(tempoRestante)) {
                 Swal.fire({
                     title: 'Preencha a Tabela!',
@@ -51,7 +60,7 @@ function obterDadosProcessos() {
                 return [];
             }
         }
-        if (algoritmo == "PRIOC" || algoritmo == "PRIOP") {
+        if (algoritmo === ALGORITMOS.PRIOC || algoritmo === ALGORITMOS.PRIOP) {
             if (isNaN(tempoChegada) || isNaN(tempoRestante) || isNaN(prioridade)) {
                 Swal.fire({
                     title: 'Preencha a Tabela!',
@@ -70,72 +79,39 @@ function obterDadosProcessos() {
 }
 
 function executarAlgoritmo() {
-
-    let algoritmo = document.getElementById("algoritmo").value;
-    let processos = obterDadosProcessos();
+    const algoritmo = document.getElementById("algoritmo").value;
+    const processos = obterDadosProcessos();
 
     document.getElementById("salvar").style.display = "block";
 
-
     let resultados;
     switch (algoritmo) {
-        case "FCFS":
-            CalcularFCFS(processos);
+        case ALGORITMOS.FCFS:
+            calcularFCFS(processos);
             break;
-        case "SJF":
-            resultados = CalcularSJF(processos);
+        case ALGORITMOS.SJF:
+            resultados = calcularSJF(processos);
             break;
-        case "PRIOC":
-            resultados = CalcularPRIOc(processos);
+        case ALGORITMOS.PRIOC:
+            resultados = calcularPRIOC(processos);
             break;
-        case "PRIOP":
-            resultados = CalcularPRIOp(processos);
+        case ALGORITMOS.PRIOP:
+            resultados = calcularPRIOP(processos);
             break;
-        case "SRTF":
-            resultados = CalcularSRTF(processos);
+        case ALGORITMOS.SRTF:
+            resultados = calcularSRTF(processos);
             break;
-        case "RR":
-            const mostrarPrompt = async () => {
-                let numeroInserido = '';
-                let isValid = false;
-
-                while (!isValid) {
-                    await Swal.fire({
-                        title: 'Digite um número:',
-                        input: 'text',
-                        inputAttributes: {
-                            autocapitalize: 'off'
-                        },
-                        showCancelButton: true,
-                        confirmButtonText: 'OK',
-                        cancelButtonText: 'Cancelar',
-                        showLoaderOnConfirm: true,
-                        preConfirm: (value) => {
-                            if (!isNaN(parseFloat(value))) {
-                                numeroInserido = parseFloat(value);
-                                isValid = true;
-                            } else {
-                                Swal.showValidationMessage('Por favor, insira um número válido!');
-                            }
-                        },
-                        allowOutsideClick: () => !Swal.isLoading()
-                    });
-                }
-
-                // Aqui você pode fazer o que precisa com o número inserido
-                let quantum = numeroInserido;
-                CalcularRR(processos, quantum);
-            };
-
-            mostrarPrompt();
-
-
+        case ALGORITMOS.RR:
+            const quantum = promptQuantum();
+            if (quantum !== null) {
+                calcularRR(processos, quantum);
+            }
             break;
         default:
             alert("Opção inválida!");
     }
 
-    if (algoritmo == "SJF" || algoritmo == "PRIOC") {
+    if (algoritmo === ALGORITMOS.SJF || algoritmo === ALGORITMOS.PRIOC) {
 
         let tempoMedioExecucaoSpan = document.getElementById("tempo-medio-execucao");
         let tempoMedioEsperaSpan = document.getElementById("tempo-medio-espera");
@@ -147,6 +123,22 @@ function executarAlgoritmo() {
     limparValoresNegativos();
 }
 
+function promptQuantum() {
+    let quantum;
+    let isValid = false;
+
+    while (!isValid) {
+        quantum = parseFloat(prompt('Digite um número:'));
+        if (!isNaN(quantum)) {
+            isValid = true;
+        } else {
+            alert('Por favor, insira um número válido!');
+        }
+    }
+
+    return quantum;
+}
+
 let chartInstance;
 
 function criarGrafico(dadosGrafico) {
@@ -156,7 +148,7 @@ function criarGrafico(dadosGrafico) {
 
     const ctx = document.getElementById('grafico').getContext('2d');
     const barData = [];
-    const cores = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)', 'rgba(255, 99, 132, 0.5)'];
+    const cores = ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)', 'rgba(255, 159, 64, 0.5)', 'rgba(255, 19, 132, 0.5)', 'rgba(255, 255, 132, 0.5)', 'rgba(255, 99, 132, 0.5)', 'rgba(255, 199, 132, 0.5)'];
 
     dadosGrafico.forEach((dado, index) => {
         barData.push({
@@ -206,7 +198,7 @@ function criarGrafico(dadosGrafico) {
     });
 }
 
-function CalcularFCFS(processos) {
+function calcularFCFS(processos) {
     let tempoDeTermino = [];
     let tempoFinal = 0;
     let tempoDeExecucao = 0;
@@ -236,7 +228,7 @@ function CalcularFCFS(processos) {
     criarGrafico(dadosGrafico);
 }
 
-function CalcularSJF(processos) {
+function calcularSJF(processos) {
     let tempoTotal = 0;
     let tempoEsperaTotal = 0;
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
@@ -278,7 +270,7 @@ function CalcularSJF(processos) {
     return resultados;
 }
 
-function CalcularPRIOc(processos) {
+function calcularPRIOC(processos) {
     let tempoTotal = 0;
     let tempoEsperaTotal = 0;
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
@@ -312,7 +304,7 @@ function CalcularPRIOc(processos) {
     return resultados;
 }
 
-function CalcularPRIOp(processos) {
+function calcularPRIOP(processos) {
     let tempoTotal = 0;
     let tempoEsperaTotal = 0;
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
@@ -366,7 +358,7 @@ function CalcularPRIOp(processos) {
     return resultados;
 }
 
-function CalcularSRTF(processos) {
+function calcularSRTF(processos) {
     let tempoTotal = 0;
     let tempoEsperaTotal = 0;
     let processosOrdenados = processos.slice().sort((a, b) => a.tempoChegada - b.tempoChegada);
@@ -425,7 +417,7 @@ class ProcessoTermino {
     }
 }
 
-function CalcularRR(processos, quantumTempo) {
+function calcularRR(processos, quantumTempo) {
     let tempoTerminoPorId = {};
     let informacoesProcessos = [...processos];
     let dadosGrafico = [];
@@ -530,20 +522,20 @@ function preencherTabelaComExcelData(worksheet) {
 }
 
 document.getElementById('excelFile').addEventListener('change', function (event) {
-    const fileInput = event.target;
-    const file = fileInput.files[0];
-    const reader = new FileReader();
+    const FILE_INPUT = event.target;
+    const FILE = FILE_INPUT.files[0];
+    const READER = new FileReader();
 
-    fileInput.value = '';
+    FILE_INPUT.value = '';
 
-    reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        preencherTabelaComExcelData(XLSX.utils.sheet_to_json(worksheet, { header: 1 }));
+    READER.onload = function (e) {
+        const DATA = new Uint8Array(e.target.result);
+        const WORKBOOK = XLSX.read(DATA, { type: 'array' });
+        const WORKSHEET = WORKBOOK.Sheets[WORKBOOK.SheetNames[0]];
+        preencherTabelaComExcelData(XLSX.utils.sheet_to_json(WORKSHEET, { header: 1 }));
     };
 
-    reader.readAsArrayBuffer(file);
+    READER.readAsArrayBuffer(FILE);
 });
 
 function limparValoresNegativos() {
@@ -553,18 +545,19 @@ function limparValoresNegativos() {
         }
     });
 
-    const tempoMedioExecucaoSpan = document.getElementById("tempo-medio-execucao");
-    const tempoMedioEsperaSpan = document.getElementById("tempo-medio-espera");
-    const tempoMedioExecucao = parseFloat(tempoMedioExecucaoSpan.textContent);
-    const tempoMedioEspera = parseFloat(tempoMedioEsperaSpan.textContent);
+    const TEMPO_MEDIO_EXECUCAO_SPAN = document.getElementById("tempo-medio-execucao");
+    const TEMPO_MEDIO_ESPERA_SPAN = document.getElementById("tempo-medio-espera");
+    const TEMPO_MEDIO_EXECUCAO = parseFloat(TEMPO_MEDIO_EXECUCAO_SPAN.textContent);
+    const TEMPO_MEDIO_ESPERA = parseFloat(TEMPO_MEDIO_ESPERA_SPAN.textContent);
 
-    if (tempoMedioExecucao < 0) {
-        tempoMedioExecucaoSpan.textContent = 0;
+    if (TEMPO_MEDIO_EXECUCAO < 0) {
+        TEMPO_MEDIO_EXECUCAO_SPAN.textContent = 0;
     }
-    if (tempoMedioEspera < 0) {
-        tempoMedioEsperaSpan.textContent = 0;
+    if (TEMPO_MEDIO_ESPERA < 0) {
+        TEMPO_MEDIO_ESPERA_SPAN.textContent = 0;
     }
 }
+
 
 function salvarGrafico() {
     var grafico = document.getElementById("grafico");
@@ -574,4 +567,3 @@ function salvarGrafico() {
     link.href = url;
     link.click();
 }
-
